@@ -14,11 +14,19 @@ interface Props {
   onSuccess: () => void
 }
 
+interface Fill {
+  side: 'YES' | 'NO'
+  quantity: number
+  fillPrice: number
+  totalCost: number
+}
+
 export default function OrderModal({ market, onClose, onSuccess }: Props) {
   const [side, setSide] = useState<'YES' | 'NO'>('YES')
   const [quantity, setQuantity] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [confirmed, setConfirmed] = useState<Fill | null>(null)
 
   const { matchup, outcome } = parseName(market.name)
   const fillPrice = side === 'YES' ? market.yes_price : 1 - market.yes_price
@@ -27,19 +35,69 @@ export default function OrderModal({ market, onClose, onSuccess }: Props) {
   async function submit() {
     setLoading(true)
     setError('')
-    const res = await fetch('/api/orders', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symbol: market.symbol, marketName: market.name, side, quantity }),
-    })
-    const data = await res.json()
-    setLoading(false)
-    if (!res.ok) {
-      setError(data.error ?? 'Order failed')
-      return
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol: market.symbol, marketName: market.name, side, quantity }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? 'Order failed — please try again')
+        return
+      }
+      setConfirmed({ side, quantity, fillPrice: data.fillPrice, totalCost: data.totalCost })
+      onSuccess()
+    } catch {
+      setError('Network error — check your connection and try again')
+    } finally {
+      setLoading(false)
     }
-    onSuccess()
-    onClose()
+  }
+
+  if (confirmed) {
+    return (
+      <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+        <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-md p-6 relative">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors text-xl leading-none"
+          >
+            ×
+          </button>
+          <div className="flex flex-col items-center text-center py-4">
+            <div className="w-14 h-14 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
+              <svg className="w-7 h-7 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-white font-bold text-lg mb-1">Order Confirmed</h2>
+            <p className="text-gray-400 text-sm mb-6">{matchup} · {outcome}</p>
+            <div className="w-full bg-gray-800 rounded-lg p-4 grid grid-cols-3 gap-4 text-center">
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Side</p>
+                <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${confirmed.side === 'YES' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300'}`}>
+                  {confirmed.side}
+                </span>
+              </div>
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Qty</p>
+                <p className="text-white font-mono font-semibold">{confirmed.quantity}</p>
+              </div>
+              <div>
+                <p className="text-gray-500 text-xs mb-1">Fill Price</p>
+                <p className="text-white font-mono font-semibold">
+                  ${(confirmed.fillPrice ?? fillPrice).toFixed(2)}
+                </p>
+              </div>
+            </div>
+            <p className="text-gray-400 text-sm mt-4">
+              Total cost: <span className="text-white font-mono">${(confirmed.totalCost ?? totalCost).toFixed(2)}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -84,7 +142,11 @@ export default function OrderModal({ market, onClose, onSuccess }: Props) {
           <span className="text-white font-mono">${totalCost.toFixed(2)}</span>
         </div>
 
-        {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+        {error && (
+          <div className="bg-red-950 border border-red-800 rounded-lg px-3 py-2 mb-4">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
 
         <div className="flex gap-2">
           <button
