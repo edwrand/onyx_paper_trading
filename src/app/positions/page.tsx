@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
+import { parseName } from '@/lib/utils'
 
 interface Position {
   id: string
@@ -13,11 +14,6 @@ interface Position {
   avgPrice: number
   currentPrice: number | null
   pnl: number | null
-}
-
-function parseName(name: string) {
-  const parts = name.split(' ; ')
-  return { matchup: parts[0] ?? name, outcome: parts[1] ?? '' }
 }
 
 export default function PositionsPage() {

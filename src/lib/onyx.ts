@@ -32,26 +32,12 @@ async function onyxFetch(path: string): Promise<any> {
   return res.json()
 }
 
+export type { Market, MarketPrices } from '@/types'
+import type { Market, MarketPrices } from '@/types'
+
 function parseSport(symbol: string): string {
   const match = symbol.match(/NX\.F\.OPT\.([A-Z]+)-/)
   return match?.[1] ?? 'OTHER'
-}
-
-export interface Market {
-  id: string
-  symbol: string
-  sport: string
-  name: string
-  status: string
-  yes_price: number
-}
-
-export interface MarketPrices {
-  symbol: string
-  bid_price: number | null
-  ask_price: number | null
-  last_price: number | null
-  volume: number
 }
 
 export function getContractType(name: string): string {

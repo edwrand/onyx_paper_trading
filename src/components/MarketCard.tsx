@@ -3,11 +3,7 @@
 import { useState } from 'react'
 import { Market } from '@/lib/onyx'
 import OrderModal from './OrderModal'
-
-function parseName(name: string) {
-  const parts = name.split(' ; ')
-  return { matchup: parts[0] ?? name, outcome: parts[1] ?? '' }
-}
+import { parseName } from '@/lib/utils'
 
 interface Props {
   market: Market
