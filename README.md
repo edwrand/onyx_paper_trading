@@ -2,7 +2,7 @@
 
 A paper trading app built on top of the Onyx Predictions API. Sign up, browse live prediction markets, and place YES/NO orders against real upstream prices — no real money, nothing actually executes on Onyx's side.
 
-**Live:** https://onyx-paper-trading-igbgb0js9-edwrands-projects.vercel.app
+**Live:** https://onyx-paper-trading-rbnbgj3fk-edwrands-projects.vercel.app
 **Repo:** https://github.com/edwrand/onyx_paper_trading
 
 ---
