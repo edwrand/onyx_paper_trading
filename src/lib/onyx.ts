@@ -4,6 +4,15 @@ let marketsCache: { data: Market[]; ts: number } | null = null
 let fetchInFlight: Promise<Market[]> | null = null
 const CACHE_TTL = 10000
 
+async function safeJson(res: Response): Promise<any> {
+  const text = await res.text()
+  try {
+    return JSON.parse(text)
+  } catch {
+    throw new Error(`Onyx API returned non-JSON (${res.status}): ${text.slice(0, 100)}`)
+  }
+}
+
 async function getToken(): Promise<string> {
   if (token) return token
   const res = await fetch(`${BASE}/api/auth/login`, {
@@ -14,7 +23,8 @@ async function getToken(): Promise<string> {
       password: process.env.ONYX_PASSWORD,
     }),
   })
-  const data = await res.json()
+  const data = await safeJson(res)
+  if (!data.access_token) throw new Error('Onyx login failed: no access_token in response')
   token = data.access_token
   return token!
 }
@@ -29,7 +39,7 @@ async function onyxFetch(path: string): Promise<any> {
     token = null
     return onyxFetch(path)
   }
-  return res.json()
+  return safeJson(res)
 }
 
 export type { Market, MarketPrices } from '@/types'

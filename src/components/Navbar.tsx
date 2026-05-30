@@ -32,6 +32,9 @@ export default function Navbar() {
         <Link href="/positions" className="text-gray-400 hover:text-white text-sm transition-colors">
           Positions
         </Link>
+        <Link href="/history" className="text-gray-400 hover:text-white text-sm transition-colors">
+          History
+        </Link>
       </div>
       <div className="flex items-center gap-4">
         {balance !== null && (

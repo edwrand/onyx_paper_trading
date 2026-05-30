@@ -1,6 +1,6 @@
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
-import { getMarketPrices } from '@/lib/onyx'
+import { getMarkets } from '@/lib/onyx'
 
 export async function GET() {
   const session = await getSession()
@@ -15,20 +15,13 @@ export async function GET() {
 
   if (positions.length === 0) return Response.json([])
 
-  const symbols = [...new Set(positions.map((p) => p.symbol))]
-  const priceResults = await Promise.allSettled(
-    symbols.map((s) => getMarketPrices(s).then((p) => ({ symbol: s, p })))
-  )
-  const priceMap = new Map<string, Awaited<ReturnType<typeof getMarketPrices>>>()
-  for (const r of priceResults) {
-    if (r.status === 'fulfilled') priceMap.set(r.value.symbol, r.value.p)
-  }
+  const markets = await getMarkets()
+  const priceMap = new Map(markets.map((m) => [m.symbol, m.yes_price]))
 
   const enriched = positions.map((pos) => {
-    const prices = priceMap.get(pos.symbol)
-    const lastPrice = prices?.last_price ?? null
-    const currentPrice = lastPrice !== null
-      ? pos.side === 'YES' ? lastPrice : 1 - lastPrice
+    const yesPrice = priceMap.get(pos.symbol) ?? null
+    const currentPrice = yesPrice !== null
+      ? pos.side === 'YES' ? yesPrice : 1 - yesPrice
       : null
     const pnl = currentPrice !== null
       ? (currentPrice - pos.avgPrice) * pos.quantity
